@@ -9,76 +9,47 @@ import {
 import { IoMdHelpCircleOutline } from "react-icons/io";
 import { motion } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router";
+import {
+  useOrderStore,
+  type Order,
+  type TrackingStep,
+} from "@/app/store/useOrderStore";
 import type { JSX } from "react";
-import type { products } from "@/types/data";
 
-type TrackingStatus = {
-  title: string;
-  desc: string;
-  date: string;
-  icon: JSX.Element;
+const iconMap: Record<TrackingStep["iconKey"], JSX.Element> = {
+  truck: <Truck size={14} />,
+  mapPin: <MapPin size={14} />,
+  packageCheck: <PackageCheck size={14} />,
+  home: <Home size={14} />,
 };
 
 const OrderTrackingPage = () => {
   const navigate = useNavigate();
-  const { state } = useLocation() as {
-    state: {
-      product: products;
-      status: string;
-      quantity: number;
-      total: number;
-      eta: {
-        date: string;
-        time: string;
-      };
-    };
-  };
+  const { state } = useLocation() as { state: Order };
 
-  if (!state) {
+  // fallback: kalau reload halaman & state ilang, ambil ulang dari store
+  const storeOrder = useOrderStore((s) =>
+    state ? s.getByOrderId(state.orderId) : undefined,
+  );
+  const order = state ?? storeOrder;
+
+  if (!order) {
     navigate("/home");
     return null;
   }
 
-  const trackingData: TrackingStatus[] = [
-    {
-      title: "Sedang Diantar",
-      desc: "Kurir sedang mengantarkan pesanan",
-      date: "18 Des 2025 • 09:10",
-      icon: <Truck size={14} />,
-    },
-    {
-      title: "Tiba di Kota Tujuan",
-      desc: "Paket tiba di gudang kota tujuan",
-      date: "17 Des 2025 • 22:41",
-      icon: <MapPin size={14} />,
-    },
-    {
-      title: "Diserahkan ke Kurir",
-      desc: "Paket telah diserahkan ke ekspedisi",
-      date: "17 Des 2025 • 11:02",
-      icon: <PackageCheck size={14} />,
-    },
-    {
-      title: "Dikemas",
-      desc: "Penjual sedang menyiapkan pesanan",
-      date: "17 Des 2025 • 09:30",
-      icon: <Home size={14} />,
-    },
-  ];
+  const tracking = order.tracking ?? [];
 
   return (
-    <div className="min-h-screen ">
-      {/* ================= HEADER ================= */}
+    <div className="min-h-screen">
       <div className="sticky top-0 bg-white border-b z-10">
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-200 cursor-pointer rounded-full"
-            >
-              <ArrowLeft className="w-6 h-6 md:w-8 md:h-8" />
-            </button>
-          </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-gray-200 cursor-pointer rounded-full"
+          >
+            <ArrowLeft className="w-6 h-6 md:w-8 md:h-8" />
+          </button>
 
           <div className="flex items-center gap-2">
             <Link
@@ -94,7 +65,6 @@ const OrderTrackingPage = () => {
         </div>
       </div>
 
-      {/* ================= TRACKING HORIZONTAL ================= */}
       <div className="p-4">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <h2 className="font-semibold text-sm sm:text-base mb-4 sm:mb-6">
@@ -102,11 +72,9 @@ const OrderTrackingPage = () => {
           </h2>
 
           <div className="relative w-full">
-            {/* garis */}
-            <div className="absolute top-[9px] sm:top-3.5 left-0 w-full h-0.5 sm:h-0.5 bg-gray-200" />
-            <div className="absolute top-[9px] sm:top-3.5 left-0 w-2/3 h-0.5 sm:h-0.5 bg-primary" />
+            <div className="absolute top-2.5 sm:top-3.5 left-0 w-full h-0.5 bg-gray-200" />
+            <div className="absolute top-2.5 sm:top-3.5 left-0 w-2/3 h-0.5 bg-primary" />
 
-            {/* dots */}
             <div className="flex justify-between relative">
               {[
                 { title: "Sedang dikirim", active: true },
@@ -135,41 +103,36 @@ const OrderTrackingPage = () => {
         </div>
       </div>
 
-      {/* ================= ORDER CARD ================= */}
       <div className="p-4">
         <div className="bg-white rounded-xl p-4 shadow-sm flex gap-3 sm:gap-4">
           <img
-            src={state.product.image}
+            src={order.product.image}
             className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
           />
-
           <div className="flex flex-col justify-between">
             <div>
               <p className="text-sm sm:text-base font-medium">
-                {state.product.title}
+                {order.product.title}
               </p>
               <p className="text-xs sm:text-sm text-primary">
-                {state.quantity} item
+                {order.qty} item
               </p>
             </div>
-
             <span className="text-xs sm:text-sm font-semibold text-primary">
-              {state.status}
+              {order.status}
             </span>
           </div>
         </div>
       </div>
 
-      {/* ================= RIWAYAT PENGIRIMAN ================= */}
       <div className="p-4">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <h2 className="font-semibold text-sm sm:text-base mb-4">
             Riwayat Pengiriman
           </h2>
 
-          {trackingData.map((item, index) => {
+          {tracking.map((item, index) => {
             const isActive = index === 0;
-
             return (
               <motion.div
                 key={index}
@@ -178,16 +141,15 @@ const OrderTrackingPage = () => {
                 transition={{ delay: index * 0.05 }}
                 className="flex gap-3 sm:gap-4 relative pb-5"
               >
-                {index !== trackingData.length - 1 && (
+                {index !== tracking.length - 1 && (
                   <span
-                    className={`absolute left-[11px] sm:left-[15px] top-6 h-full border-l ${
+                    className={`absolute left-2.75 sm:left-3.75 top-6 h-full border-l ${
                       isActive
                         ? "border-primary"
                         : "border-dashed border-gray-300"
                     }`}
                   />
                 )}
-
                 <div
                   className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center z-10
                   ${
@@ -196,9 +158,8 @@ const OrderTrackingPage = () => {
                       : "bg-white border border-gray-300 text-gray-400"
                   }`}
                 >
-                  {item.icon}
+                  {iconMap[item.iconKey]}
                 </div>
-
                 <div className="flex-1">
                   <p
                     className={`text-sm sm:text-base font-medium ${

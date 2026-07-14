@@ -8,7 +8,7 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   orderId: string;
-  product: {
+  product?: {
     title: string;
     image: string;
     variant: string;
@@ -49,6 +49,10 @@ const UploadBuktiPembayaran = ({
     setNote("");
     onClose();
   };
+
+  // Guard: kalau modal dibuka tapi product belum siap (misal activeOrder masih null),
+  // jangan render body-nya. Ini yang bikin TS error hilang tanpa perlu non-null assertion.
+  if (!product) return null;
 
   return (
     <AnimatePresence>

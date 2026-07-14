@@ -159,7 +159,7 @@ const SidebarContent = ({
       <div className="px-3 mb-4">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-red-500 hover:text-white transition cursor-pointer"
+          className="w-full flex justify-center items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-red-500 hover:text-white transition cursor-pointer"
         >
           <logoutMenu.icon className="w-4 h-4" />
           <span>{logoutMenu.name}</span>

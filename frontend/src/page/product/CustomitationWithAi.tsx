@@ -7,7 +7,6 @@ import { toast } from "sonner";
 
 import { useCakeCustomization } from "@/hooks/useCakeCustomization";
 import PreviewCake from "@/components/user/Custom/PreviewCake";
-import UkuranSelector from "@/components/user/Custom/UkuranSelector";
 import LayerSelector from "@/components/user/Custom/LayerSelector";
 import DropdownPilihan from "@/components/user/Custom/DropdownPilihan";
 import ReferensiCake from "@/components/user/Custom/ReferensiCake";
@@ -107,9 +106,8 @@ const CustomitationWithAi = () => {
 
           {/* ── KANAN (desktop): semua opsi kustomisasi ── */}
           <div className="flex flex-col gap-4 mt-4 lg:mt-0">
-            <motion.div variants={item}>
-              <UkuranSelector state={state} />
-            </motion.div>
+            {/* LayerSelector sekarang otomatis merender 1 UkuranSelector
+                per layer sesuai jumlah layer yang dipilih (1–4) */}
             <motion.div variants={item}>
               <LayerSelector state={state} />
             </motion.div>

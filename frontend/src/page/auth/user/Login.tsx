@@ -264,7 +264,7 @@ const Login = () => {
                     </Button>
                   </motion.div>
 
-                  {/* Sign Up */}
+                  {/* Register */}
                   <motion.div
                     variants={childVariant}
                     className="flex justify-center"
@@ -275,7 +275,7 @@ const Login = () => {
                         to="/register"
                         className="text-purple-700 font-medium hover:text-purple-900 transition"
                       >
-                        Sign Up
+                        Register
                       </Link>
                     </p>
                   </motion.div>

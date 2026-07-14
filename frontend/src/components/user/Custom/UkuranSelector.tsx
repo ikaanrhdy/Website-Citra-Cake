@@ -4,29 +4,34 @@ import type { UkuranCm } from "@/types/cake";
 
 interface Props {
   state: CakeCustomizationState;
+  layerIndex: number; // 0 = Layer 1, 1 = Layer 2, dst
 }
 
-const UkuranSelector = ({ state }: Props) => {
+const UkuranSelector = ({ state, layerIndex }: Props) => {
   const { ukuran, setUkuran } = state;
+  console.log("UkuranSelector render", layerIndex, ukuran?.[layerIndex]);
+  const selected = ukuran?.[layerIndex] ?? null;
+  console.log("UkuranSelector render selected:", layerIndex, selected);
 
   return (
-    <div className="bg-primary/5 rounded-xl p-4 space-y-2">
-      <h3 className="font-semibold text-sm">
-        Pilih Ukuran <span className="text-red-500">*</span>
-      </h3>
-      <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+    <div className="space-y-2">
+      <p className="text-sm font-medium">
+        Pilih Ukuran Layer {layerIndex + 1}{" "}
+        <span className="text-red-500">*</span>
+      </p>
+      <div className="grid grid-cols-4 gap-2">
         {UKURAN_OPTIONS.map((u) => (
           <button
             key={u}
             type="button"
-            onClick={() => setUkuran(u as UkuranCm)}
-            className={`py-2 rounded text-sm cursor-pointer transition ${
-              ukuran === u
+            onClick={() => setUkuran(layerIndex, u as UkuranCm)}
+            className={`py-1.5 rounded text-xs cursor-pointer transition ${
+              selected === u
                 ? "bg-primary text-white"
                 : "bg-white border text-gray-700 hover:bg-gray-100"
             }`}
           >
-            {u} cm
+            {u}
           </button>
         ))}
       </div>

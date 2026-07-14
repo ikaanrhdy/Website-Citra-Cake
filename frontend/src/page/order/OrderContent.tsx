@@ -14,7 +14,7 @@ const OrderContent = ({ status }: Props) => {
     case "Belum Bayar":
       return <BelumBayarPage />;
 
-    case "DiProses":
+    case "Diproses":
       return <Diproses />;
 
     case "Dikirim":

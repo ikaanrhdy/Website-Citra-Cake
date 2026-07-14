@@ -29,6 +29,7 @@ export interface ReferensiCake {
 
 export interface DekorasiState {
   topping: ToppingId;
+  toppingCatatan: string; // diisi kalau topping = "random"
   lilin: LilinId;
   lilinCatatan: string; // misal isi angka/huruf yang diminta
   lilinJumlah: number;
@@ -39,7 +40,8 @@ export interface DekorasiState {
 }
 
 export interface CakeCustomizationFields {
-  ukuran: UkuranCm | null;
+  // Satu ukuran per layer (index 0 = Layer 1, dst). Slot kosong = null.
+  ukuran: (UkuranCm | null)[];
   layer: LayerCount | null;
   baseCake: string | null;
   tipeCream: string | null;
@@ -72,7 +74,8 @@ export interface CakeCustomizationDerived {
 }
 
 export interface CakeCustomizationActions {
-  setUkuran: (v: UkuranCm) => void;
+  // v diisi ke slot ke-`index` (per layer), bukan satu nilai global lagi
+  setUkuran: (index: number, v: UkuranCm) => void;
   setLayer: (v: LayerCount) => void;
   setBaseCake: (v: string) => void;
   setTipeCream: (v: string) => void;
@@ -80,6 +83,7 @@ export interface CakeCustomizationActions {
   setReferensiUrl: (url: string) => void;
   setReferensiFile: (fileName: string | null) => void;
   setTopping: (v: ToppingId) => void;
+  setToppingCatatan: (v: string) => void;
   setLilin: (v: LilinId) => void;
   setLilinDetail: (catatan: string, jumlah: number) => void;
   toggleTopper: () => void;

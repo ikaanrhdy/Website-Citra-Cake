@@ -1,7 +1,6 @@
 import OrderCard from "@/page/admin/orderAdmin/OrderCard";
 import type { OrderAdmin } from "@/types/orderAdmin";
-import { ChevronDown, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router";
+import { ChevronDown } from "lucide-react";
 
 interface Props {
   visibleOrders: OrderAdmin[];
@@ -10,19 +9,10 @@ interface Props {
 }
 
 const RecentOrdersSection = ({ visibleOrders, hasMore, onLoadMore }: Props) => {
-  const navigate = useNavigate();
-
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-base sm:text-lg">Pesanan Terbaru</h2>
-        <button
-          onClick={() => navigate("/admin/order")}
-          className="inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-purple-600 hover:text-purple-700 cursor-pointer"
-        >
-          Lihat Semua
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
       </div>
 
       <div className="space-y-3">

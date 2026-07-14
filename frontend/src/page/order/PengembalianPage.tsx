@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { ArrowLeft, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useReturnStore } from "@/app/store/useReturnStore";
+import { useOrderStore, type Order } from "@/app/store/useOrderStore";
 import { toast } from "sonner";
 
 const reasons = [
@@ -14,9 +14,15 @@ const reasons = [
 
 const PengembalianPage = () => {
   const navigate = useNavigate();
-  const { state } = useLocation();
-  console.log(state);
-  const addRequest = useReturnStore((s) => s.addRequest);
+  const { orderId: orderIdParam } = useParams();
+  const { state } = useLocation() as { state: { order?: Order } | null };
+
+  const getByOrderId = useOrderStore((s) => s.getByOrderId);
+  const requestReturn = useOrderStore((s) => s.requestReturn);
+
+  // Prioritas: order dari state (dikirim via navigate), fallback lookup ke store pakai param URL
+  const order =
+    state?.order ?? (orderIdParam ? getByOrderId(orderIdParam) : undefined);
 
   const [reason, setReason] = useState("");
   const [proofFile, setProofFile] = useState<File | null>(null);
@@ -24,16 +30,16 @@ const PengembalianPage = () => {
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState<{ reason?: string; proof?: string }>({});
 
-  if (!state?.item) {
+  if (!order) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Data produk tidak ditemukan
+        Data pesanan tidak ditemukan
       </div>
     );
   }
 
-  const { item, qty = 1 } = state;
-  const total = item.price * qty;
+  const { product, qty } = order;
+  const total = product.price * qty;
 
   const handleFileChange = (file: File | null) => {
     setProofFile(file);
@@ -62,8 +68,7 @@ const PengembalianPage = () => {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    addRequest({
-      productId: item.id,
+    requestReturn(order.orderId, {
       reason,
       proofFile,
       proofPreview,
@@ -71,7 +76,7 @@ const PengembalianPage = () => {
     });
 
     toast.success("Pengajuan pengembalian berhasil dibuat");
-    navigate(-1);
+    navigate("/pengembalian", { replace: true });
   };
 
   return (
@@ -92,18 +97,18 @@ const PengembalianPage = () => {
         {/* PRODUCT */}
         <div className="bg-primary/5 rounded-lg p-3 flex gap-3">
           <img
-            src={item.image}
-            alt={item.title}
+            src={product.image}
+            alt={product.title}
             className="w-16 h-16 rounded-md object-cover border shrink-0"
           />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium line-clamp-1">{item.title}</p>
-            <p className="text-xs text-gray-400">Putih, Merah</p>
+            <p className="text-sm font-medium line-clamp-1">{product.title}</p>
+            <p className="text-xs text-gray-400">{order.variant}</p>
           </div>
           <div className="text-right shrink-0">
             <p className="text-xs text-gray-500">x{qty}</p>
             <p className="text-sm font-medium mt-1">
-              Rp {item.price.toLocaleString("id-ID")}
+              Rp {product.price.toLocaleString("id-ID")}
             </p>
             <p className="text-xs text-gray-500">
               Total {qty} produk: Rp {total.toLocaleString("id-ID")}

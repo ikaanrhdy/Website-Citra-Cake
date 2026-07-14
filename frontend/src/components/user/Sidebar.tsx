@@ -21,11 +21,11 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
             <Link
               to={item.path}
               onClick={onClose}
-              className={`flex items-center gap-3 p-3 font-medium rounded-lg transition-all${isActive
+              className={`flex items-center gap-3 p-3 font-medium rounded-lg transition-all${
+                isActive
                   ? "bg-purple-300 text-purple-900 font-semibold shadow-md"
                   : "text-primary hover:bg-purple-200"
-              }
-  `}
+              }`}
             >
               {/* Icon with motion pulse on active */}
               <motion.div

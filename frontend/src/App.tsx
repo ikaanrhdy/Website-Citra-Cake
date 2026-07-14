@@ -92,7 +92,7 @@ function App() {
 
         {/* chat */}
         <Route element={<ScreenCS />} path="/chat-bot" />
-        <Route element={<RincianPesananPage />} path="/rincian-pesanan" />
+        <Route element={<RincianPesananPage />} path="/rincian-pesanan/:id" />
 
         {/* cart */}
         <Route element={<ProtectedRoutes />}>

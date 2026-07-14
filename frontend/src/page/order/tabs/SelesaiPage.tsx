@@ -1,99 +1,123 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { product } from "@/data/product";
 import { motion } from "motion/react";
-import { Link } from "react-router";
-import { useReturnStore } from "@/app/store/useReturnStore";
+import { useOrderStore } from "@/app/store/useOrderStore";
+import { useShallow } from "zustand/react/shallow";
+import PenilaianModal from "@/components/user/PenilaianModal";
 
 const SelesaiPage = () => {
-  const data = product;
-  const isReturned = useReturnStore((s) => s.isReturned);
+  const orders = useOrderStore(useShallow((s) => s.getByStatus("Selesai")));
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
 
-  // sembunyikan item yang sudah diajukan pengembalian
-  const visibleData = data.slice(0, 5).filter((item) => !isReturned(item.id));
+  const activeOrder = orders.find((o) => o.orderId === activeOrderId);
+
+  if (orders.length === 0) {
+    return (
+      <p className="text-center text-gray-500 py-10">
+        Tidak ada pesanan selesai.
+      </p>
+    );
+  }
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="show"
-      variants={{
-        hidden: { opacity: 0 },
-        show: {
-          opacity: 1,
-          transition: { staggerChildren: 0.08 },
-        },
-      }}
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6 lg:gap-8"
-    >
-      {visibleData.map((item) => (
-        <motion.div
-          key={item.id}
-          variants={{
-            hidden: { opacity: 0, y: 16 },
-            show: { opacity: 1, y: 0 },
-          }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          className=" flex flex-col gap-4 p-5 bg-white border border-gray-300 rounded-lg md:p-6 lg:p-7"
-        >
-          {/* ================= HEADER ================= */}
-          <div className="flex justify-between items-center">
-            <h4 className="text-sm font-semibold">Custom Citra Cake</h4>
-            <p className="text-primary text-sm font-semibold">Selesai</p>
-          </div>
+    <>
+      <motion.div
+        initial="hidden"
+        animate="show"
+        variants={{
+          hidden: { opacity: 0 },
+          show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+        }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6 lg:gap-8"
+      >
+        {orders.map((order) => {
+          const sudahDinilai = !!order.penilaian;
 
-          {/* ================= PRODUCT ================= */}
-          <div className="flex justify-between gap-4">
-            <div className="flex gap-3">
-              {/* IMAGE */}
-              <div className="shrink-0 p-1 rounded border border-gray-300">
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="w-20 h-20 md:w-24 md:h-24 lg:w-24 lg:h-24 rounded object-cover"
-                />
+          return (
+            <motion.div
+              key={order.orderId}
+              variants={{
+                hidden: { opacity: 0, y: 16 },
+                show: { opacity: 1, y: 0 },
+              }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="flex flex-col gap-4 p-5 bg-white border border-gray-300 rounded-lg overflow-hidden md:p-6 lg:p-7"
+            >
+              <div className="flex justify-between items-center gap-2">
+                <h4 className="text-sm font-semibold truncate">
+                  Custom Citra Cake
+                </h4>
+                <p className="text-primary text-sm font-semibold shrink-0">
+                  Selesai
+                </p>
               </div>
 
-              {/* INFO */}
-              <div className="flex flex-col justify-center gap-1">
-                <h2 className="text-sm font-medium">{item.title}</h2>
-                <p className="text-[10px] text-gray-400">Putih, Merah</p>
+              {/* PRODUCT: grid kiri-kanan, ratio 1/3 gambar - 2/3 detail */}
+              <div className="grid grid-cols-3 gap-3 md:gap-4">
+                {/* GAMBAR - 1/3 */}
+                <div className="col-span-1 flex items-start justify-center p-1 rounded-lg border border-[#D8DADC] shrink-0">
+                  <img
+                    src={order.product.image}
+                    alt={order.product.title}
+                    className="w-full aspect-square rounded-lg object-cover"
+                  />
+                </div>
+
+                {/* DETAIL - 2/3, atas-bawah pakai grid rows */}
+                <div className="col-span-2 grid grid-rows-2 gap-2 min-w-0">
+                  {/* ROW ATAS: nama produk & variant */}
+                  <div className="flex flex-col justify-center gap-1 min-w-0">
+                    <h2 className="text-sm font-medium truncate">
+                      {order.product.title}
+                    </h2>
+                    <p className="text-[10px] text-gray-400">{order.variant}</p>
+                  </div>
+
+                  {/* ROW BAWAH: qty & harga */}
+                  <div className="flex flex-col justify-end items-end gap-1 text-right">
+                    <p className="text-xs">x{order.qty}</p>
+                    <p className="text-xs font-medium">
+                      Rp {order.product.price.toLocaleString("id-ID")}
+                    </p>
+                    <p className="text-xs md:text-base text-gray-600">
+                      Total {order.qty} produk {""}
+                      Rp {""}
+                      {(order.product.price * order.qty).toLocaleString(
+                        "id-ID",
+                      )}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* PRICE */}
-            <div className="flex flex-col items-end justify-center gap-1">
-              <p className="text-xs">x1</p>
-              <p className="text-xs font-medium">Rp {item.price}</p>
-              <p className="text-xs text-gray-600">
-                Total 1 Produk: Rp {item.price}
-              </p>
-            </div>
-          </div>
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  className=" text-primary border border-[#D8DADC] p-5 cursor-pointer text-xs md:text-sm md:py-4"
+                  onClick={() => setActiveOrderId(order.orderId)}
+                >
+                  {sudahDinilai ? "Lihat Penilaian" : "Nilai"}
+                </Button>
 
-          {/* ================= ACTION ================= */}
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button
-              asChild
-              variant="ghost"
-              className="bg-red-50 text-red-500 cursor-pointer text-xs md:text-sm md:py-4"
-            >
-              <Link to={`/pengembalian/${item.id}`} state={{ item, qty: 1 }}>
-                Ajukan Pengembalian
-              </Link>
-            </Button>
-            <Button
-              variant="ghost"
-              className="bg-gray-100 text-gray-600  cursor-pointer text-xs md:text-sm md:py-4"
-            >
-              Lihat Penilaian
-            </Button>
+                <Button className="bg-purple-50 text-primary w-fit text-xs md:text-sm md:px-6 md:py-4 hover:text-white cursor-pointer">
+                  Beli Lagi
+                </Button>
+              </div>
+            </motion.div>
+          );
+        })}
+      </motion.div>
 
-            <Button className="bg-purple-50 text-primary w-fit text-xs md:text-sm md:px-6 md:py-4 hover:text-white cursor-pointer">
-              Beli Lagi
-            </Button>
-          </div>
-        </motion.div>
-      ))}
-    </motion.div>
+      {activeOrder && (
+        <PenilaianModal
+          open={!!activeOrderId}
+          onOpenChange={(open) => !open && setActiveOrderId(null)}
+          orderId={activeOrder.orderId}
+          productTitle={activeOrder.product.title}
+          existing={activeOrder.penilaian}
+        />
+      )}
+    </>
   );
 };
 

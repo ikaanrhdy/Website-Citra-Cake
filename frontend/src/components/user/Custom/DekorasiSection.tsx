@@ -17,6 +17,7 @@ const DekorasiSection = ({ state }: Props) => {
   const {
     dekorasi,
     setTopping,
+    setToppingCatatan,
     setLilin,
     setLilinDetail,
     toggleTopper,
@@ -100,6 +101,23 @@ const DekorasiSection = ({ state }: Props) => {
             </button>
           ))}
         </div>
+
+        {/* Catatan muncul otomatis begitu topping "Random" dipilih */}
+        {dekorasi.topping === "random" && (
+          <div className="mt-2 bg-white border rounded-md p-3 space-y-2">
+            <p className="text-xs text-gray-600">
+              <span className="font-medium text-primary">Catatan:</span> Topping
+              Random tersedia dalam 3 pilihan: messes, oreo, atau permen.
+              Cantumkan pilihanmu, kalau tidak akan dipilih secara acak.
+            </p>
+            <Input
+              value={dekorasi.toppingCatatan}
+              onChange={(e) => setToppingCatatan(e.target.value)}
+              placeholder="Pilihan toppingmu (misal: oreo)"
+              className="text-xs"
+            />
+          </div>
+        )}
       </div>
 
       {/* LILIN */}

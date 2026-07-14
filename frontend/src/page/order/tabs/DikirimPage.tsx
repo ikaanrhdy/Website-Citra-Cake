@@ -1,87 +1,104 @@
 import { Button } from "@/components/ui/button";
-import { product } from "@/data/product";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router";
+import { useOrderStore } from "@/app/store/useOrderStore";
+import { useShallow } from "zustand/react/shallow";
 
 const DikirimPage = () => {
+  const orders = useOrderStore(useShallow((s) => s.getByStatus("Dikirim")));
   const navigate = useNavigate();
-  const data = product[0];
 
-  if (!data) return null;
+  if (orders.length === 0) {
+    return (
+      <p className="text-center text-gray-500 py-10">
+        Tidak ada pesanan dikirim.
+      </p>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2 md:gap-6 lg:gap-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className="flex flex-col gap-4 p-5 bg-white border border-gray-300 rounded-lg md:p-8 
-        md:max-w-5xl md:mx-auto lg:p-10 lg:max-w-6xl"
-      >
-        {/* HEADER */}
-        <div className="flex justify-between items-center">
-          <h4 className="text-sm md:text-lg font-semibold">
-            Custom Citra Cake
-          </h4>
-          <p className="text-primary text-sm md:text-lg font-semibold">
-            Dikirim
-          </p>
-        </div>
+      {orders.map((order) => (
+        <motion.div
+          key={order.orderId}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="flex flex-col gap-4 p-5 bg-white border border-gray-300 rounded-lg overflow-hidden md:p-8 
+          md:max-w-5xl md:mx-auto lg:p-10 lg:max-w-6xl"
+        >
+          <div className="flex justify-between items-center gap-2">
+            <h4 className="text-sm md:text-lg font-semibold truncate">
+              Custom Citra Cake
+            </h4>
+            <p className="text-primary text-sm md:text-lg font-semibold shrink-0">
+              Dikirim
+            </p>
+          </div>
 
-        {/* PRODUCT */}
-        <div className="flex justify-between gap-4 md:gap-8">
-          <div className="flex gap-3 md:gap-6">
-            <div className="flex p-1 rounded border border-gray-300">
+          {/* PRODUCT: grid kiri-kanan, ratio 1/3 gambar - 2/3 detail */}
+          <div className="grid grid-cols-3 gap-3 md:gap-8">
+            {/* GAMBAR - 1/3 */}
+            <div className="col-span-1 flex items-start justify-center p-1 rounded-lg border border-[#D8DADC] shrink-0">
               <img
-                src={data.image}
-                alt={data.title}
-                className="w-20 h-20 md:w-28 md:h-28 rounded object-cover"
+                src={order.product.image}
+                alt={order.product.title}
+                className="w-full aspect-square rounded-lg object-cover"
               />
             </div>
 
-            <div className="flex flex-col justify-center gap-1">
-              <h2 className="text-sm md:text-lg font-medium">{data.title}</h2>
-              <p className="text-xs md:text-sm text-gray-400">Putih, Merah</p>
+            {/* DETAIL - 2/3, atas-bawah pakai grid rows */}
+            <div className="col-span-2 grid grid-rows-2 gap-2 min-w-0">
+              {/* ROW ATAS: nama produk & variant */}
+              <div className="flex flex-col justify-center gap-1 min-w-0">
+                <h2 className="text-sm md:text-lg font-medium truncate">
+                  {order.product.title}
+                </h2>
+                <p className="text-xs md:text-sm text-gray-400">
+                  {order.variant}
+                </p>
+              </div>
+
+              {/* ROW BAWAH: qty & harga */}
+              <div className="flex flex-col justify-end items-end gap-2 text-right">
+                <p className="text-xs md:text-base">x{order.qty}</p>
+                <p className="text-xs md:text-base font-medium">
+                  Rp {order.product.price.toLocaleString("id-ID")}
+                </p>
+                <p className="text-xs md:text-base text-gray-600">
+                  Total {order.qty} produk {""}
+                  Rp {""}
+                  {(order.product.price * order.qty).toLocaleString("id-ID")}
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col items-end justify-center gap-2">
-            <p className="text-xs md:text-base">x1</p>
-            <p className="text-xs md:text-base font-medium">Rp {data.price}</p>
-            <p className="text-xs md:text-base text-gray-600">
-              Total: Rp {data.price}
-            </p>
-          </div>
-        </div>
-
-        {/* INFO */}
-        <Button className="bg-purple-50 text-gray-800 md:text-base md:py-6 cursor-pointer hover:text-white">
-          Cake sedang dikirim!
-        </Button>
-
-        {/* ACTION */}
-        <div className="flex justify-end">
-          <Button
-            onClick={() =>
-              navigate("/order/tracking", {
-                state: {
-                  product: data,
-                  status: "Dikirim",
-                  quantity: 1,
-                  total: data.price,
-                  eta: {
-                    date: "18 Des 2025",
-                    time: "18:00 - 21:00",
-                  },
-                },
-              })
-            }
-            className="bg-purple-50 text-primary w-fit md:text-base md:px-8 md:py-6 cursor-pointer hover:text-white"
-          >
-            Riwayat Pengiriman
+          <Button className="bg-purple-50 text-gray-800 md:text-base md:py-6 cursor-pointer hover:text-white">
+            Cake sedang dikirim!
           </Button>
-        </div>
-      </motion.div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              onClick={() =>
+                navigate(`/rincian-pesanan/${order.orderId}`, {
+                  state: { order },
+                })
+              }
+              variant="ghost"
+              className="bg-white border border-gray-300 text-gray-800 w-full md:text-base md:py-6 cursor-pointer hover:text-white"
+            >
+              Rincian Pesanan
+            </Button>
+            <Button
+              onClick={() => navigate("/order/tracking", { state: order })}
+              className="bg-purple-50 text-primary w-full md:text-base md:py-6 cursor-pointer hover:text-white"
+            >
+              Riwayat Pengiriman
+            </Button>
+          </div>
+        </motion.div>
+      ))}
     </div>
   );
 };

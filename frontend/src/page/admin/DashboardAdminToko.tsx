@@ -50,7 +50,7 @@ const DashboardAdminToko = ({ name }: Props) => {
       className="space-y-4 sm:space-y-6"
     >
       <AdminPageHeader
-        title="Dashboard Admin Toko"
+        title="Dashboard"
         subtitle={`Overview pesanan dan penjualan bulan ini${name ? ` · Halo, ${name}` : ""}`}
         onOpenSidebar={onOpenSidebar}
       />

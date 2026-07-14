@@ -21,7 +21,6 @@ const OrderPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen relative">
-      {/* ================= HEADER ================= */}
       <div className="flex items-center gap-2 bg-white p-3 md:p-5 md:px-8 border-b sticky top-0 z-20">
         <button
           onClick={onOpenSidebar}
@@ -29,11 +28,9 @@ const OrderPage = () => {
         >
           <Menu />
         </button>
-
         <h2 className="font-medium text-sm md:text-xl">Belanjaan Saya</h2>
       </div>
 
-      {/* ================= TAB BAR ================= */}
       <div className="bg-white border-b sticky top-14 md:top-18 z-10">
         <div className="max-w-6xl mx-auto">
           <div className="flex md:justify-center">
@@ -41,16 +38,14 @@ const OrderPage = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`relative flex-1 md:flex-none px-1 md:px-7 py-3 md:py-4 text-[11px] md:text-base whitespace-nowrap transition cursor-pointer text-center
-            ${
-              activeTab === tab
-                ? "text-primary font-semibold"
-                : "text-gray-500 hover:text-gray-700"
-            }
-          `}
+                className={`relative font-roboto flex-1 md:flex-none px-1 md:px-7 py-3 md:py-4 text-[11px] md:text-base whitespace-nowrap transition cursor-pointer text-center
+                ${
+                  activeTab === tab
+                    ? "text-primary font-semibold"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
               >
                 {tab}
-
                 {activeTab === tab && (
                   <motion.div
                     layoutId="underline"
@@ -62,7 +57,7 @@ const OrderPage = () => {
           </div>
         </div>
       </div>
-      {/* ================= CONTENT ================= */}
+
       <div className="flex-1 px-4 md:px-12 lg:px-20 py-4 md:py-8">
         <AnimatePresence mode="wait">
           <motion.div
