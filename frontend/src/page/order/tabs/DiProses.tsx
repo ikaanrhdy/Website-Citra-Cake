@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useOrderStore } from "@/app/store/useOrderStore";
 import { useShallow } from "zustand/react/shallow";
 
 const Diproses = () => {
   const orders = useOrderStore(useShallow((s) => s.getByStatus("Diproses")));
   const navigate = useNavigate();
+  const location = useLocation();
 
   if (orders.length === 0) {
     return (
@@ -97,9 +98,7 @@ const Diproses = () => {
 
           <Button
             onClick={() =>
-              navigate(`/rincian-pesanan/${order.orderId}`, {
-                state: { order },
-              })
+                navigate(`/rincian-pesanan/${order.orderId}`, { state: { order } })
             }
             className="bg-purple-50 text-gray-800 md:text-base md:py-6 lg:py-7 cursor-pointer"
           >

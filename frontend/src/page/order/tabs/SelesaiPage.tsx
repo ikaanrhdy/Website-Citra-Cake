@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
+import { useNavigate } from "react-router";
 import { useOrderStore } from "@/app/store/useOrderStore";
 import { useShallow } from "zustand/react/shallow";
 import PenilaianModal from "@/components/user/PenilaianModal";
 
 const SelesaiPage = () => {
   const orders = useOrderStore(useShallow((s) => s.getByStatus("Selesai")));
+  const navigate = useNavigate();
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
 
   const activeOrder = orders.find((o) => o.orderId === activeOrderId);
@@ -99,7 +101,29 @@ const SelesaiPage = () => {
                   {sudahDinilai ? "Lihat Penilaian" : "Nilai"}
                 </Button>
 
-                <Button className="bg-purple-50 text-primary w-fit text-xs md:text-sm md:px-6 md:py-4 hover:text-white cursor-pointer">
+                <Button
+                  className="bg-purple-50 text-primary w-fit text-xs md:text-sm md:px-6 md:py-4 hover:text-white cursor-pointer"
+                  onClick={() =>
+                    navigate("/checkout", {
+                      state: {
+                        buyNow: true,
+                        items: [
+                          {
+                            id: order.product.id,
+                            title: order.product.title,
+                            image: order.product.image,
+                            price: order.product.price,
+                            qty: order.qty,
+                            ukuran: order.variant,
+                          },
+                        ],
+                        alamat: order.alamat,
+                        telepon: order.telepon,
+                        tanggalKirim: order.tanggalPengiriman,
+                      },
+                    })
+                  }
+                >
                   Beli Lagi
                 </Button>
               </div>

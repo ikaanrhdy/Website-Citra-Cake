@@ -4,10 +4,11 @@ import {
   Truck,
   MapPin,
   Home,
-  Bot,
+  MessageCircle,
+  ClipboardList,
 } from "lucide-react";
-import { IoMdHelpCircleOutline } from "react-icons/io";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { Link, useLocation, useNavigate } from "react-router";
 import {
   useOrderStore,
@@ -52,14 +53,9 @@ const OrderTrackingPage = () => {
           </button>
 
           <div className="flex items-center gap-2">
-            <Link
-              to={"/chat-bot"}
-              className="p-2 rounded-full hover:bg-gray-300"
-            >
-              <Bot className="text-primary w-8 h-8 md:w-10 md:h-10" />
-            </Link>
-            <Link to={"/help"} className="p-2 rounded-full hover:bg-gray-300">
-              <IoMdHelpCircleOutline className="text-primary w-8 h-8 md:w-10 md:h-10" />
+            <Link to="/chat-bot" className="relative inline-flex items-center">
+              <MessageCircle className="text-primary w-8 h-8" />
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-red-500 border-2 border-white" />
             </Link>
           </div>
         </div>
@@ -104,23 +100,53 @@ const OrderTrackingPage = () => {
       </div>
 
       <div className="p-4">
-        <div className="bg-white rounded-xl p-4 shadow-sm flex gap-3 sm:gap-4">
-          <img
-            src={order.product.image}
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
-          />
-          <div className="flex flex-col justify-between">
-            <div>
-              <p className="text-sm sm:text-base font-medium">
-                {order.product.title}
-              </p>
-              <p className="text-xs sm:text-sm text-primary">
-                {order.qty} item
-              </p>
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <img
+              src={order.product.image}
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
+            />
+            <div className="flex-1">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm sm:text-base font-medium">
+                    {order.status}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-xs text-gray-500">{order.orderId}</p>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(
+                            order.orderId || "",
+                          );
+                          toast.success("Order ID berhasil disalin");
+                        } catch {
+                          toast.error("Gagal menyalin Order ID");
+                        }
+                      }}
+                      className="text-gray-400"
+                      aria-label="Salin Order ID"
+                    >
+                      <ClipboardList className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <button
+                    onClick={() =>
+                      navigate(`/rincian-pesanan/${order.orderId}`, {
+                        state: { order, backgroundLocation: location },
+                      })
+                    }
+                    className="mt-1 px-3 py-1 text-xs border rounded-md"
+                  >
+                    Rincian Pesanan
+                  </button>
+                </div>
+              </div>
             </div>
-            <span className="text-xs sm:text-sm font-semibold text-primary">
-              {order.status}
-            </span>
           </div>
         </div>
       </div>

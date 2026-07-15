@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate, type Location } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
@@ -64,6 +64,7 @@ interface OrderState {
   orderId?: string;
   fromOrder?: boolean; // true kalau masuk dari "Ubah Pembayaran" di halaman pesanan
   buyNow?: boolean; // true kalau masuk dari "Beli Sekarang" di ProductDetail
+  backgroundLocation?: Location;
   items?: OrderStateItem[];
   alamat?: string;
   telepon?: string;
@@ -79,6 +80,9 @@ const Checkout = () => {
   const cartStore = useCartStore();
 
   const orderState = location.state as OrderState | null;
+  const backgroundLocation = (location.state as any)?.backgroundLocation as
+    | Location
+    | undefined;
 
   // ===== STATE ===== (prefill dari orderState kalau datang dari "Ubah Pembayaran")
   const [alamat, setAlamat] = useState(orderState?.alamat ?? "");
@@ -183,9 +187,13 @@ const Checkout = () => {
       return;
     }
 
-    // ===== Mode "Beli Sekarang" langsung dari ProductDetail =====
     if (orderState?.buyNow) {
       toast.success("Pesanan dibuat (dummy)");
+      cartStore.clearCheckout();
+      if (backgroundLocation) {
+        navigate(-1);
+        return;
+      }
       navigate("/home");
       return;
     }

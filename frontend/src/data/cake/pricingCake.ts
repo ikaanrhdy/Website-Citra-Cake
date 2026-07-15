@@ -21,9 +21,13 @@ function findPrice(
 export function calculatePriceBreakdown(
   fields: CakeCustomizationFields,
 ): PriceBreakdown {
-  const hargaDasar = fields.ukuran
-    ? (HARGA_DASAR_PER_UKURAN[fields.ukuran] ?? 0)
-    : 0;
+  // ukuran sekarang array (satu nilai per layer) — jumlahkan harga dasar tiap layer
+  // Array.isArray dipakai buat jaga-jaga kalau ada state lama/tersisa yang belum migrasi
+  const ukuranArr = Array.isArray(fields.ukuran) ? fields.ukuran : [];
+  const hargaDasar = ukuranArr.reduce(
+    (sum, u) => sum + (u ? (HARGA_DASAR_PER_UKURAN[u] ?? 0) : 0),
+    0,
+  );
 
   const hargaLayer = fields.layer ? (fields.layer - 1) * HARGA_TAMBAH_LAYER : 0;
 
@@ -50,9 +54,11 @@ export function calculatePriceBreakdown(
 export function isCakeCustomizationValid(
   fields: CakeCustomizationFields,
 ): boolean {
+  const ukuranArr = Array.isArray(fields.ukuran) ? fields.ukuran : [];
   return Boolean(
-    fields.ukuran &&
     fields.layer &&
+    ukuranArr.length === fields.layer &&
+    ukuranArr.every((u) => u !== null) &&
     fields.baseCake &&
     fields.tipeCream &&
     fields.warnaCream,

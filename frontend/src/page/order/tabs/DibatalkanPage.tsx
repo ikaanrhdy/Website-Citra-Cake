@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useOrderStore } from "@/app/store/useOrderStore";
 import { useShallow } from "zustand/react/shallow";
 
 const DibatalkanPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const orders = useOrderStore(useShallow((s) => s.getByStatus("Dibatalkan")));
 
   if (orders.length === 0) {
@@ -56,6 +57,7 @@ const DibatalkanPage = () => {
         alamat: order.alamat ?? "",
         telepon: order.telepon ?? "",
         tanggalKirim: tanggalKirimValid,
+        backgroundLocation: location,
       },
     });
   };

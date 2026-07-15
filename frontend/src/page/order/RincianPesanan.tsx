@@ -12,8 +12,11 @@ const formatRp = (n: number) => `Rp ${n.toLocaleString("id-ID")}`;
 
 const RincianPesananPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { orderId: orderIdParam } = useParams();
-  const { state } = useLocation() as { state: { order?: Order } | null };
+  const { state } = location as {
+    state: { order?: Order; backgroundLocation?: Location } | null;
+  };
 
   const getByOrderId = useOrderStore((s) => s.getByOrderId);
   const cancelOrder = useOrderStore((s) => s.cancelOrder);
@@ -198,7 +201,9 @@ const RincianPesananPage = () => {
                 </p>
               )}
               <Button
-                onClick={() => navigate("/order/tracking", { state: order })}
+                onClick={() =>
+                  navigate("/order/tracking", { state: order })
+                }
                 variant="ghost"
                 className="w-fit bg-purple-50 text-primary text-xs mt-1 cursor-pointer hover:text-white"
               >

@@ -13,8 +13,13 @@ import {
 } from "@/data/cake/pricingCake";
 import { getPreviewSummary } from "@/data/cake/summaryCake";
 
+// Store ini cuma bertugas nyimpen state & manggil logic dari lib/cake.
+// Nggak ada kalkulasi harga / validasi yang ditulis langsung di sini.
+
+// PENTING: `ukuran` array, satu slot per layer (index 0 = Layer 1, dst).
+// PENTING: `dekorasi.toppingCatatan` diisi user waktu topping = "random".
 const initialFields: CakeCustomizationFields = {
-  ukuran: null,
+  ukuran: [null],
   layer: null,
   baseCake: null,
   tipeCream: null,
@@ -22,6 +27,7 @@ const initialFields: CakeCustomizationFields = {
   referensi: { url: "", fileName: null },
   dekorasi: {
     topping: "random",
+    toppingCatatan: "",
     lilin: "random",
     lilinCatatan: "",
     lilinJumlah: 1,
@@ -60,16 +66,22 @@ export const useCakeCustomization = create<CakeCustomizationState>((set) => ({
   ...initialFields,
   ...deriveFrom(initialFields),
 
-  setUkuran: (v: UkuranCm) =>
+  // v diisi per-index (per layer)
+  setUkuran: (index: number, v: UkuranCm) =>
     set((s) => {
-      const fields = { ...getFields(s), ukuran: v };
-      return { ukuran: v, ...deriveFrom(fields) };
+      const ukuran = [...s.ukuran];
+      ukuran[index] = v;
+      const fields = { ...getFields(s), ukuran };
+      return { ukuran, ...deriveFrom(fields) };
     }),
 
   setLayer: (v: LayerCount) =>
     set((s) => {
-      const fields = { ...getFields(s), layer: v };
-      return { layer: v, ...deriveFrom(fields) };
+      // Pertahankan ukuran yang udah dipilih di slot yang masih ada,
+      // slot baru (kalau nambah layer) diisi null dulu
+      const ukuran = Array.from({ length: v }, (_, i) => s.ukuran[i] ?? null);
+      const fields = { ...getFields(s), layer: v, ukuran };
+      return { layer: v, ukuran, ...deriveFrom(fields) };
     }),
 
   setBaseCake: (v: string) =>
@@ -104,9 +116,21 @@ export const useCakeCustomization = create<CakeCustomizationState>((set) => ({
       return { referensi, ...deriveFrom(fields) };
     }),
 
+  // Kalau pindah dari "random" ke topping lain, catatan otomatis dikosongin
   setTopping: (v: ToppingId) =>
     set((s) => {
-      const dekorasi = { ...s.dekorasi, topping: v };
+      const dekorasi = {
+        ...s.dekorasi,
+        topping: v,
+        toppingCatatan: v === "random" ? s.dekorasi.toppingCatatan : "",
+      };
+      const fields = { ...getFields(s), dekorasi };
+      return { dekorasi, ...deriveFrom(fields) };
+    }),
+
+  setToppingCatatan: (v: string) =>
+    set((s) => {
+      const dekorasi = { ...s.dekorasi, toppingCatatan: v };
       const fields = { ...getFields(s), dekorasi };
       return { dekorasi, ...deriveFrom(fields) };
     }),
@@ -166,8 +190,9 @@ export const useCakeCustomization = create<CakeCustomizationState>((set) => ({
       return { catatanPesanan: v, ...deriveFrom(fields) };
     }),
 
-  reset: () => set({ ...initialFields, ...deriveFrom(initialFields) }),
+  reset: () =>
+    set({
+      ...initialFields,
+      ...deriveFrom(initialFields),
+    }),
 }));
-
-// Biar semua komponen yang sebelumnya `import type { CakeCustomizationState } from "@/hooks/useCakeCustomization"` tetap jalan tanpa ubah import
-export type { CakeCustomizationState } from "@/types/cake";

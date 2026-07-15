@@ -1,6 +1,6 @@
 import { LAYER_OPTIONS } from "@/data/cake/cakeOption";
-import type { CakeCustomizationState } from "@/hooks/useCakeCustomization";
-import type { LayerCount } from "@/types/cake";
+
+import type { CakeCustomizationState, LayerCount } from "@/types/cake";
 import UkuranSelector from "./UkuranSelector";
 
 interface Props {

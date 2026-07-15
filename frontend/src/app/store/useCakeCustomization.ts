@@ -196,3 +196,7 @@ export const useCakeCustomization = create<CakeCustomizationState>((set) => ({
       ...deriveFrom(initialFields),
     }),
 }));
+
+// Biar komponen yang import `CakeCustomizationState` dari sini (bukan dari
+// "@/types/cake" langsung) tetap jalan tanpa perlu ubah import satu-satu
+export type { CakeCustomizationState } from "@/types/cake";

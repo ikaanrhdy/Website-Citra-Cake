@@ -29,7 +29,7 @@ export interface ReferensiCake {
 
 export interface DekorasiState {
   topping: ToppingId;
-  toppingCatatan: string; // diisi kalau topping = "random"
+  toppingCatatan: string; // diisi user waktu topping = "random"
   lilin: LilinId;
   lilinCatatan: string; // misal isi angka/huruf yang diminta
   lilinJumlah: number;

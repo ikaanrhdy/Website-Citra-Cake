@@ -1,4 +1,5 @@
-import { Route, Routes } from "react-router";
+import { Route, Routes, useLocation, type Location } from "react-router";
+import type { ReactNode } from "react";
 // toast
 import { Toaster } from "sonner";
 
@@ -53,11 +54,25 @@ import RincianPesananPage from "./page/order/RincianPesanan";
 import RincianPesananAdmin from "./page/admin/RincianPesananAdmin";
 import NotFoundPage from "./components/common/NotFoundPage";
 
+function ModalWrapper({ children }: { children: ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm overflow-y-auto">
+      <div className="min-h-screen p-4 md:p-8">
+        <div className="mx-auto max-w-6xl">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const location = useLocation();
+  const state = location.state as { backgroundLocation?: Location };
+  const backgroundLocation = state?.backgroundLocation || location;
+
   return (
     <>
       <Toaster position="bottom-right" richColors closeButton />
-      <Routes>
+      <Routes location={backgroundLocation}>
         {/* admin */}
         <Route element={<ProtectedAdminRoute />}>
           <Route element={<AdminLayout />}>
@@ -136,6 +151,20 @@ function App() {
         {/* not found */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+
+      {state?.backgroundLocation && (
+        <ModalWrapper>
+          <Routes>
+            <Route
+              path="/rincian-pesanan/:id"
+              element={<RincianPesananPage />}
+            />
+            {/* OrderTrackingPage should be full-screen route, not modal */}
+            <Route path="/pengembalian/:id" element={<PengembalianPage />} />
+            <Route path="/checkout" element={<Checkout />} />
+          </Routes>
+        </ModalWrapper>
+      )}
     </>
   );
 }

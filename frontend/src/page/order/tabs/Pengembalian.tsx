@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useOrderStore, type ReturnOutcome } from "@/app/store/useOrderStore";
 import { useShallow } from "zustand/react/shallow";
 
@@ -28,6 +28,7 @@ const Pengembalian = () => {
     useShallow((s) => s.getByStatus("Pengembalian Selesai")),
   );
   const navigate = useNavigate();
+  const location = useLocation();
 
   if (orders.length === 0) {
     return (
@@ -115,9 +116,7 @@ const Pengembalian = () => {
             {/* ACTION */}
             <Button
               onClick={() =>
-                navigate(`/rincian-pesanan/${order.orderId}`, {
-                  state: { order },
-                })
+                navigate(`/rincian-pesanan/${order.orderId}`, { state: { order } })
               }
               variant="ghost"
               className="w-full border border-gray-300 bg-white text-gray-800 cursor-pointer text-xs md:text-sm md:py-5 hover:text-white"
