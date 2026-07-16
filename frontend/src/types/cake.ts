@@ -1,4 +1,4 @@
-export type UkuranCm = 12 | 18 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55;
+export type UkuranCm = 10 | 12 | 18 | 20 | 25;
 export type LayerCount = 1 | 2 | 3 | 4;
 
 export interface SelectOption {

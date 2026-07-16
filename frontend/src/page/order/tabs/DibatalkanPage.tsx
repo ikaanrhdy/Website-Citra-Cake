@@ -83,9 +83,7 @@ const DibatalkanPage = () => {
           className="flex flex-col gap-4 p-5 bg-white border border-gray-300 rounded-lg overflow-hidden md:p-6 lg:p-7"
         >
           <div className="flex justify-between items-center gap-2">
-            <h4 className="text-sm font-semibold truncate">
-              Custom Citra Cake
-            </h4>
+            <h4 className="text-sm font-semibold truncate">Citra Cake</h4>
             <p className="text-sm font-semibold text-primary shrink-0">
               Dibatalkan
             </p>

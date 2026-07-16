@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { ArrowLeft } from "lucide-react";
@@ -6,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 import { useCakeCustomization } from "@/hooks/useCakeCustomization";
+import { useCartStore } from "@/app/store/useCartProduct";
+import { svgToPngDataUrl } from "@/utils/svgToPNGDataUrl";
 import PreviewCake from "@/components/user/Custom/PreviewCake";
 import LayerSelector from "@/components/user/Custom/LayerSelector";
 import DropdownPilihan from "@/components/user/Custom/DropdownPilihan";
@@ -23,11 +26,22 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
+const FALLBACK_IMAGE =
+  "data:image/svg+xml;charset=utf-8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="280">
+      <rect width="100%" height="100%" fill="#F3E8DC"/>
+      <text x="50%" y="50%" text-anchor="middle" fill="#B08968" font-size="16" font-family="sans-serif">Custom Cake</text>
+    </svg>`,
+  );
+
 const CustomitationWithAi = () => {
   const navigate = useNavigate();
   const state = useCakeCustomization();
+  const addCustomCakeToCart = useCartStore((s) => s.addCustomCakeToCart);
+  const previewRef = useRef<HTMLDivElement>(null);
 
-  const handleSubmit = (action: "cart" | "buy") => {
+  const handleSubmit = async (action: "cart" | "buy") => {
     if (!state.isValid) {
       toast.error(
         "Lengkapi semua pilihan kustomisasi (ukuran, layer, base cake, tipe & warna cream)",
@@ -35,10 +49,72 @@ const CustomitationWithAi = () => {
       return;
     }
 
-    toast.success(
-      action === "cart" ? "Ditambahkan ke keranjang" : "Lanjut ke pembelian",
-    );
-    if (action === "buy") navigate("/checkout");
+    const totalPrice = state.priceBreakdown.total;
+
+    const { layerLabel, baseCakeLabel, tipeCreamLabel, warnaCreamLabel } =
+      state.previewSummary;
+    const summary = `${layerLabel} • ${baseCakeLabel} • ${tipeCreamLabel} • ${warnaCreamLabel}`;
+
+    const customFields = {
+      ukuran: state.ukuran,
+      layer: state.layer,
+      baseCake: state.baseCake,
+      tipeCream: state.tipeCream,
+      warnaCream: state.warnaCream,
+      referensi: state.referensi,
+      dekorasi: state.dekorasi,
+      ucapan: state.ucapan,
+      catatanPesanan: state.catatanPesanan,
+    };
+
+    // Convert SVG preview jadi PNG data URL, biar gambar cake custom
+    // tetap kelihatan pas dibuka lagi di Cart/Checkout (bukan re-render SVG)
+    let previewImage = FALLBACK_IMAGE;
+    const svgEl = previewRef.current?.querySelector("svg");
+    if (svgEl) {
+      try {
+        previewImage = await svgToPngDataUrl(svgEl as unknown as SVGSVGElement);
+      } catch (err) {
+        console.error("Gagal convert preview cake jadi gambar:", err);
+      }
+    }
+
+    if (action === "cart") {
+      addCustomCakeToCart({
+        title: "Custom Cake",
+        image: previewImage,
+        price: totalPrice,
+        summary,
+        customFields,
+      });
+      toast.success("Custom cake ditambahkan ke keranjang");
+      state.reset();
+      navigate("/cart");
+      return;
+    }
+
+    // action === "buy" → langsung ke checkout, skip keranjang.
+    // customFields & isCustom ikut dikirim biar Checkout bisa nampilin
+    // badge "Custom" + ringkasan, tanpa perlu render ulang SVG-nya.
+    toast.success("Lanjut ke pembelian");
+    navigate("/checkout", {
+      state: {
+        buyNow: true,
+        items: [
+          {
+            id: `custom-${Date.now()}`,
+            title: "Custom Cake",
+            image: previewImage,
+            price: totalPrice,
+            qty: 1,
+            ukuran: summary,
+            isCustom: true,
+            customFields,
+          },
+        ],
+      },
+    });
+    state.reset();
   };
 
   return (
@@ -77,7 +153,7 @@ const CustomitationWithAi = () => {
           {/* ── KIRI (desktop): Preview + Total, sticky ── */}
           <div className="lg:sticky lg:top-20 flex flex-col gap-4 lg:gap-5">
             <motion.div variants={item}>
-              <PreviewCake state={state} />
+              <PreviewCake ref={previewRef} state={state} />
             </motion.div>
 
             {/* Total & tombol aksi cuma tampil di sini pas desktop/tablet */}

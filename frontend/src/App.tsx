@@ -53,6 +53,7 @@ import UserLayout from "./layout/WithNavbarLayout";
 import RincianPesananPage from "./page/order/RincianPesanan";
 import RincianPesananAdmin from "./page/admin/RincianPesananAdmin";
 import NotFoundPage from "./components/common/NotFoundPage";
+import PenilaianPage from "./components/user/PenilaianPage";
 
 function ModalWrapper({ children }: { children: ReactNode }) {
   return (
@@ -108,6 +109,9 @@ function App() {
         {/* chat */}
         <Route element={<ScreenCS />} path="/chat-bot" />
         <Route element={<RincianPesananPage />} path="/rincian-pesanan/:id" />
+
+        {/* penilaian */}
+        <Route element={<PenilaianPage />} path="/penilaian/:id" />
 
         {/* cart */}
         <Route element={<ProtectedRoutes />}>

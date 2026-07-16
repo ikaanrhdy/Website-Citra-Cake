@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu } from "lucide-react";
+import { useSearchParams } from "react-router";
 import OrderContent from "./OrderContent";
 import { useUserLayoutContext } from "@/layout/userLayoutContext";
 
@@ -15,9 +15,33 @@ const TABS = [
 
 type TabType = (typeof TABS)[number];
 
+// id per tab, dipakai sebagai key URL (?tab=...) & atribut id tombol
+const TAB_IDS: Record<TabType, string> = {
+  "Belum Bayar": "belum-bayar",
+  Diproses: "diproses",
+  Dikirim: "dikirim",
+  Selesai: "selesai",
+  Pengembalian: "pengembalian",
+  Dibatalkan: "dibatalkan",
+};
+
+const isValidTab = (value: string | null): value is TabType =>
+  TABS.includes(value as TabType);
+
 const OrderPage = () => {
-  const [activeTab, setActiveTab] = useState<TabType>("Belum Bayar");
+  const [searchParams, setSearchParams] = useSearchParams();
   const { onOpenSidebar } = useUserLayoutContext();
+
+  // Tab aktif diambil dari URL (?tab=...), bukan dari useState lokal.
+  // Jadi kalau user pindah ke halaman lain (rincian, pengembalian, dst) lalu
+  // menekan tombol kembali/back browser, dia balik ke tab yang sama, bukan reset.
+  const tabParam = searchParams.get("tab");
+  const activeTab: TabType = isValidTab(tabParam) ? tabParam : "Belum Bayar";
+
+  const handleTabChange = (tab: TabType) => {
+    // replace: true biar klik pindah tab gak numpuk-numpuk di history back
+    setSearchParams({ tab }, { replace: true });
+  };
 
   return (
     <div className="flex flex-col min-h-screen relative">
@@ -37,7 +61,8 @@ const OrderPage = () => {
             {TABS.map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                id={`tab-${TAB_IDS[tab]}`}
+                onClick={() => handleTabChange(tab)}
                 className={`relative font-roboto flex-1 md:flex-none px-1 md:px-7 py-3 md:py-4 text-[11px] md:text-base whitespace-nowrap transition cursor-pointer text-center
                 ${
                   activeTab === tab
@@ -62,6 +87,7 @@ const OrderPage = () => {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
+            id={`tabpanel-${TAB_IDS[activeTab]}`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}

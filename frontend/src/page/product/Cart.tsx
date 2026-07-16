@@ -11,6 +11,7 @@ const Cart = () => {
 
   // ambil data dari store
   const items = useCartStore((state) => state.items);
+  console.log("items di cart:", items);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const increaseQty = useCartStore((state) => state.increaseQty);
   const decreaseQty = useCartStore((state) => state.decreaseQty);

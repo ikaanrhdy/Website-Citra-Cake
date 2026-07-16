@@ -4,7 +4,6 @@ import { ArrowLeft, MapPin, Truck, PackageCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import UploadBuktiPembayaran from "@/components/user/UploadBuktiPembayaran";
-import PenilaianModal from "@/components/user/PenilaianModal";
 import { useOrderStore, type Order } from "@/app/store/useOrderStore";
 import { toast } from "sonner";
 
@@ -23,7 +22,6 @@ const RincianPesananPage = () => {
   const submitBuktiPembayaran = useOrderStore((s) => s.submitBuktiPembayaran);
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [isPenilaianOpen, setIsPenilaianOpen] = useState(false);
 
   // Prioritas: order dari state (dikirim via navigate), fallback lookup ke store pakai param URL
   const order =
@@ -105,6 +103,19 @@ const RincianPesananPage = () => {
     });
     toast.success("Bukti pembayaran terkirim");
     setIsUploadOpen(false);
+  };
+
+  const handleNilai = () => {
+    navigate(`/penilaian/${orderId}`, {
+      state: {
+        productTitle: product.title,
+        productImage: product.image,
+        variant,
+        qty,
+        price: product.price,
+        existing: penilaian,
+      },
+    });
   };
 
   const statusLabel: Record<Order["status"], string> = {
@@ -201,9 +212,7 @@ const RincianPesananPage = () => {
                 </p>
               )}
               <Button
-                onClick={() =>
-                  navigate("/order/tracking", { state: order })
-                }
+                onClick={() => navigate("/order/tracking", { state: order })}
                 variant="ghost"
                 className="w-fit bg-purple-50 text-primary text-xs mt-1 cursor-pointer hover:text-white"
               >
@@ -361,7 +370,7 @@ const RincianPesananPage = () => {
                   </Button>
                 )}
                 <Button
-                  onClick={() => setIsPenilaianOpen(true)}
+                  onClick={handleNilai}
                   className={`w-full cursor-pointer ${
                     !returnDetail ? "" : "col-span-2"
                   } bg-gray-100 text-gray-600 hover:text-white`}
@@ -394,16 +403,6 @@ const RincianPesananPage = () => {
         }}
         onSubmit={handleUploadSubmit}
       />
-
-      {status === "Selesai" && (
-        <PenilaianModal
-          open={isPenilaianOpen}
-          onOpenChange={setIsPenilaianOpen}
-          orderId={orderId}
-          productTitle={product.title}
-          existing={penilaian}
-        />
-      )}
     </div>
   );
 };

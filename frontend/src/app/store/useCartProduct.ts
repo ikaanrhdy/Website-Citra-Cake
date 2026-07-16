@@ -1,11 +1,15 @@
 import { create } from "zustand";
 import type { productCart } from "@/types/data";
+import type { CakeCustomizationFields } from "@/types/cake";
 import { calculatePriceBySize } from "@/utils/data";
 
 export type CartItem = productCart & {
   qty: number;
   selectedSize: string;
   finalPrice: number;
+  // ↓ field tambahan khusus custom cake, opsional biar item cart biasa gak kena efek
+  isCustom?: boolean;
+  customFields?: CakeCustomizationFields;
 };
 
 export type CheckoutData = {
@@ -23,6 +27,15 @@ type CartState = {
   increaseQty: (id: string, selectedItems: string) => void;
   decreaseQty: (id: string, selectedItems: string) => void;
   clearCart: () => void;
+
+  // ==== Custom Cake ====
+  addCustomCakeToCart: (payload: {
+    title?: string;
+    image?: string;
+    price: number; // total harga dari calculatePriceBreakdown().total
+    summary: string; // ringkasan siap tampil, mis. "2 Layer • Brownies Kukus • Buttercream • Merah"
+    customFields: CakeCustomizationFields;
+  }) => void;
 
   // Checkout
   checkout: (selectedItems: CartItem[]) => void;
@@ -43,11 +56,11 @@ export const useCartStore = create<CartState>((set, get) => ({
     const finalPrice = calculatePriceBySize(
       product.price,
       product.size,
-      selectedSize
+      selectedSize,
     );
 
     const exist = items.find(
-      (i) => i.id === product.id && i.selectedSize === selectedSize
+      (i) => i.id === product.id && i.selectedSize === selectedSize,
     );
 
     let newItems: CartItem[];
@@ -56,7 +69,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       newItems = items.map((i) =>
         i.id === product.id && i.selectedSize === selectedSize
           ? { ...i, qty: i.qty + 1 }
-          : i
+          : i,
       );
     } else {
       newItems = [
@@ -80,7 +93,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   removeFromCart: (id: string, selectedSize: string) => {
     const newItems = get().items.filter(
-      (i) => !(i.id === id && i.selectedSize === selectedSize)
+      (i) => !(i.id === id && i.selectedSize === selectedSize),
     );
 
     set({
@@ -94,7 +107,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     const newItems = get().items.map((i) =>
       i.id === id && i.selectedSize === selectedSize
         ? { ...i, qty: i.qty + 1 }
-        : i
+        : i,
     );
     set({
       items: newItems,
@@ -108,7 +121,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       .items.map((i) =>
         i.id === id && i.selectedSize === selectedSize
           ? { ...i, qty: i.qty - 1 }
-          : i
+          : i,
       )
       .filter((i) => i.qty > 0);
     set({
@@ -120,11 +133,43 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   clearCart: () => set({ items: [], totalQty: 0, totalPrice: 0 }),
 
+  // ================= CUSTOM CAKE =================
+  // Custom cake selalu qty = 1 per submit. Kalau user custom lagi dengan
+  // konfigurasi beda, itu jadi item baru dengan id unik sendiri (bukan digabung).
+  addCustomCakeToCart: ({ title, image, price, summary, customFields }) => {
+    const items = get().items;
+
+    const newItem: CartItem = {
+      id: `custom-${Date.now()}`,
+      title: title ?? "Custom Cake",
+      description: summary,
+      image: image ?? "/images/custom-cake-placeholder.png",
+      price,
+      category: "custom-cake",
+      size: [summary],
+      rating: 0,
+      reviews: 0,
+      qty: 1,
+      selectedSize: summary,
+      finalPrice: price,
+      isCustom: true,
+      customFields,
+    };
+
+    const newItems = [...items, newItem];
+
+    set({
+      items: newItems,
+      totalQty: newItems.reduce((a, b) => a + b.qty, 0),
+      totalPrice: newItems.reduce((a, b) => a + b.qty * b.finalPrice, 0),
+    });
+  },
+
   // ================= CHECKOUT =================
   checkout: (selectedItems) => {
     const subtotal = selectedItems.reduce(
       (sum, item) => sum + item.finalPrice * item.qty,
-      0
+      0,
     );
     const payload: CheckoutData = { items: selectedItems, subtotal };
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));

@@ -3,7 +3,7 @@ import { useShallow } from "zustand/react/shallow";
 import UploadBuktiPembayaran from "@/components/user/UploadBuktiPembayaran";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useOrderStore, type Order } from "@/app/store/useOrderStore";
 import { product } from "@/data/product";
 
@@ -50,12 +50,11 @@ const BelumBayarPage = () => {
   const rekomendasi = product.slice(1, 7);
 
   const navigate = useNavigate();
-  const location = useLocation();
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
 
   const handleLihatRincian = (order: Order) => {
-                navigate(`/rincian-pesanan/${order.orderId}`, { state: { order } })
+    navigate(`/rincian-pesanan/${order.orderId}`, { state: { order } });
   };
 
   const handleUbahPembayaran = (order: Order) => {
@@ -124,7 +123,7 @@ const BelumBayarPage = () => {
             {/* HEADER */}
             <div className="flex justify-between items-center gap-2">
               <h4 className="text-sm md:text-lg font-semibold truncate">
-                Custom Citra Cake
+                Citra Cake
               </h4>
               <button
                 onClick={() => openUpload(order)}

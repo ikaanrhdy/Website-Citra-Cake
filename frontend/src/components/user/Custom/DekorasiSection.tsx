@@ -5,7 +5,7 @@ import {
   LILIN_OPTIONS,
   TOPPER_PRICE_PER_PCS,
 } from "@/data/cake/cakeOption";
-import type { CakeCustomizationState } from "@/hooks/useCakeCustomization";
+import type { CakeCustomizationState } from "@/types/cake";
 
 const formatRp = (n: number) => `Rp ${n.toLocaleString("id-ID")}`;
 
@@ -17,7 +17,6 @@ const DekorasiSection = ({ state }: Props) => {
   const {
     dekorasi,
     setTopping,
-    setToppingCatatan,
     setLilin,
     setLilinDetail,
     toggleTopper,
@@ -107,9 +106,9 @@ const DekorasiSection = ({ state }: Props) => {
           <div className="mt-2 bg-white border rounded-md p-3 space-y-2">
             <p className="text-xs text-gray-600">
               <span className="font-medium text-primary">Catatan:</span> Topping
-              Random tersedia dalam 3 pilihan: messes, oreo, atau permen.
-              Cantumkan pilihanmu di catatan pesanan, jika tidak akan dipilih
-              secara acak.
+              Random tersedia dalam 3 pilihan: permen yupi, marsmallow, oreo,
+              atau marie regal. Cantumkan pilihanmu di catatan pesanan, jika
+              tidak akan dipilih secara acak.
             </p>
           </div>
         )}
