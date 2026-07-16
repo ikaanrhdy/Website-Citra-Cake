@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/input";
-import type { CakeCustomizationState } from "@/hooks/useCakeCustomization";
+import type { CakeCustomizationState } from "@/types/cake";
 
 interface Props {
   state: CakeCustomizationState;

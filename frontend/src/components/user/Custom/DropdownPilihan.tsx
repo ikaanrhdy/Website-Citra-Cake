@@ -3,7 +3,7 @@ import {
   TIPE_CREAM_OPTIONS,
   WARNA_CREAM_OPTIONS,
 } from "@/data/cake/cakeOption";
-import type { CakeCustomizationState } from "@/hooks/useCakeCustomization";
+import type { CakeCustomizationState } from "@/types/cake";
 
 const formatRp = (n: number) => `Rp ${n.toLocaleString("id-ID")}`;
 

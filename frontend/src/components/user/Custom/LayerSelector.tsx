@@ -1,5 +1,4 @@
 import { LAYER_OPTIONS } from "@/data/cake/cakeOption";
-
 import type { CakeCustomizationState, LayerCount } from "@/types/cake";
 import UkuranSelector from "./UkuranSelector";
 

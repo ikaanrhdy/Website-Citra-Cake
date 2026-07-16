@@ -1,4 +1,4 @@
-import type { CakeCustomizationState } from "@/hooks/useCakeCustomization";
+import type { CakeCustomizationState } from "@/types/cake";
 
 const formatRp = (n: number) => `Rp ${n.toLocaleString("id-ID")}`;
 
