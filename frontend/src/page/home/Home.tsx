@@ -29,6 +29,7 @@ const cardAnim = {
 };
 
 const Home = () => {
+  // Pengambilan data produk menggunakan store
   const { data, isLoading, getProducts } = useProductStore();
 
   const [page, setPage] = useState(0);
@@ -37,9 +38,10 @@ const Home = () => {
   const ITEMS_PER_PAGE = 6;
 
   useEffect(() => {
-    getProducts();
+    getProducts(); // Memuat data dari database saat halaman pertama kali diakses
   }, [getProducts]);
 
+  // Logika pagination untuk membatasi jumlah produk yang ditampilkan
   const paginatedProducts = data.slice(
     page * ITEMS_PER_PAGE,
     (page + 1) * ITEMS_PER_PAGE,

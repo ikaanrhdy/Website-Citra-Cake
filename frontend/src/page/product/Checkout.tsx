@@ -182,7 +182,7 @@ const Checkout = () => {
     // ===== Mode "Ubah Pembayaran" dari pesanan yang sudah ada =====
     if (orderState?.fromOrder) {
       toast.success("Metode pembayaran berhasil diubah (dummy)");
-      navigate("/belum-bayar"); // sesuaikan dengan route detail pesanan kamu
+      navigate("/order"); // sesuaikan dengan route detail pesanan kamu
       return;
     }
 
