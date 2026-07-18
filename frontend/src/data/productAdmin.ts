@@ -43,9 +43,9 @@ export const product: productsAdmin[] = [
   },
   {
     id: "3",
-    title: "Brownies",
+    title: "Chocolate Brownies Ulang Tahun",
     description: "Brownies lembut dan legit dengan topping coklat",
-    image: "/product/7.avif",
+    image: "/product/12.jpeg",
     price: 95000,
     category: "Cake",
     size: [
@@ -61,4 +61,4 @@ export const product: productsAdmin[] = [
   },
 ];
 
-export const baseCake = []
+export const baseCake = [];

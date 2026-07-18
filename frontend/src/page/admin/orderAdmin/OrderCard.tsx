@@ -91,7 +91,11 @@ const OrderCard = ({
       return;
     }
 
-    // ── PROTEKSI: "Selesai" wajib ada bukti sampai dulu ──
+    // ── PROTEKSI: "Selesai" wajib sudah pernah "Dikirim" DAN ada bukti sampai ──
+    if (actionLabel === "Selesai" && !order.dikirimAt) {
+      alert("Pesanan ini belum pernah dikirim, tidak bisa ditandai Selesai.");
+      return;
+    }
     if (actionLabel === "Selesai" && !order.buktiSampai) {
       alert(
         "Upload bukti foto sampai dulu sebelum menandai pesanan ini Selesai.",
@@ -262,14 +266,17 @@ const OrderCard = ({
           {order.actions.map((action) => {
             const ActionIcon = action.icon;
             const isSelesaiLocked =
-              action.label === "Selesai" && !order.buktiSampai;
+              action.label === "Selesai" &&
+              (!order.dikirimAt || !order.buktiSampai);
             return (
               <button
                 key={action.label}
                 onClick={(e) => handleActionClick(e, action.label)}
                 title={
                   isSelesaiLocked
-                    ? "Upload bukti sampai dulu sebelum menandai Selesai"
+                    ? !order.dikirimAt
+                      ? "Pesanan belum pernah dikirim"
+                      : "Upload bukti sampai dulu sebelum menandai Selesai"
                     : undefined
                 }
                 className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border transition-opacity cursor-pointer hover:opacity-80 ${action.textClass} ${action.bgClass} ${action.borderClass} ${

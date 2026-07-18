@@ -193,7 +193,11 @@ const RincianPesananAdmin = () => {
       return;
     }
 
-    // ── PROTEKSI: "Selesai" wajib ada bukti sampai dulu ──
+    // ── PROTEKSI: "Selesai" wajib sudah pernah "Dikirim" DAN ada bukti sampai ──
+    if (actionLabel === "Selesai" && !order.dikirimAt) {
+      alert("Pesanan ini belum pernah dikirim, tidak bisa ditandai Selesai.");
+      return;
+    }
     if (actionLabel === "Selesai" && !order.buktiSampai) {
       alert(
         "Upload bukti foto sampai dulu sebelum menandai pesanan ini Selesai.",
@@ -559,14 +563,17 @@ const RincianPesananAdmin = () => {
               {order.actions.map((action) => {
                 const ActionIcon = action.icon;
                 const isSelesaiLocked =
-                  action.label === "Selesai" && !order.buktiSampai;
+                  action.label === "Selesai" &&
+                  (!order.dikirimAt || !order.buktiSampai);
                 return (
                   <button
                     key={action.label}
                     onClick={() => handleActionClick(action.label)}
                     title={
                       isSelesaiLocked
-                        ? "Upload bukti sampai dulu sebelum menandai Selesai"
+                        ? !order.dikirimAt
+                          ? "Pesanan belum pernah dikirim"
+                          : "Upload bukti sampai dulu sebelum menandai Selesai"
                         : undefined
                     }
                     className={`inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-md border transition-opacity hover:opacity-80 cursor-pointer ${action.textClass} ${action.bgClass} ${action.borderClass} ${

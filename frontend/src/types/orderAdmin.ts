@@ -81,6 +81,9 @@ export interface OrderAdmin {
   refundRequest?: RefundRequestInfo;
   cancelRequest?: CancelRequestInfo;
   buktiSampai?: BuktiSampaiInfo;
+  // Tanggal & waktu order pertama kali berstatus "Dikirim". Dipakai sebagai
+  // jejak bahwa pesanan memang pernah dikirim, syarat sebelum boleh "Selesai".
+  dikirimAt?: string;
   subtotalPengiriman?: number;
   biayaLayanan?: number;
 }

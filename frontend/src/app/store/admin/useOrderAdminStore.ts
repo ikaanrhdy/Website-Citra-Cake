@@ -6,12 +6,15 @@ import { ACTIVE_ORDER_STATUSES } from "@/constants/orderAdmin";
 // Aksi apa saja yang tersedia setelah order berada di status tertentu.
 // Dipakai supaya tombol aksi otomatis ter-update tiap kali status berubah,
 // bukan cuma disimpan statis dari data dummy awal.
+//
+// PENTING: "Diproses" cuma boleh lanjut ke "Dikirim" (bukan langsung "Sampai"),
+// biar alurnya wajib berurutan: Menunggu -> Diproses -> Dikirim -> Sampai -> Selesai.
 const getActionsForStatus = (status: OrderStatusKey) => {
   switch (status) {
     case "Menunggu":
       return [actionButtons.Proses, actionButtons.Tolak];
     case "Diproses":
-      return [actionButtons.Dikirim, actionButtons.Sampai];
+      return [actionButtons.Dikirim];
     case "Dikirim":
       return [actionButtons.Sampai];
     case "Sampai":
@@ -22,6 +25,20 @@ const getActionsForStatus = (status: OrderStatusKey) => {
     default:
       return [];
   }
+};
+
+// Alur status yang sah — dari status saat ini, status berikutnya yang boleh
+// dituju HARUS ada di daftar ini. Mencegah lompat tahap (mis. Diproses
+// langsung ke Sampai/Selesai) walaupun dipanggil langsung lewat store,
+// bukan cuma lewat tombol UI.
+const FORWARD_FLOW: Record<OrderStatusKey, OrderStatusKey[]> = {
+  Menunggu: ["Diproses", "Dibatalkan"],
+  Diproses: ["Dikirim"],
+  Dikirim: ["Sampai"],
+  Sampai: ["Selesai"],
+  Selesai: [],
+  Dibatalkan: [],
+  Dikembalikan: [],
 };
 
 const nowId = () =>
@@ -48,8 +65,8 @@ interface OrderStore extends OrderStoreState {
 
   // Alur status pesanan biasa (Menunggu -> Diproses -> Dikirim -> Sampai -> Selesai,
   // atau Menunggu -> Dibatalkan kalau ditolak admin).
-  // Mengembalikan true kalau berhasil, false kalau ditolak (mis. mau "Selesai"
-  // tapi belum upload bukti sampai).
+  // Mengembalikan true kalau berhasil, false kalau ditolak (mis. lompat tahap,
+  // atau mau "Selesai" tapi belum upload bukti sampai).
   updateOrderStatus: (id: string, status: OrderStatusKey) => boolean;
 
   // Simpan bukti foto + catatan saat paket sudah sampai. Wajib dipanggil
@@ -101,16 +118,30 @@ const useOrderAdminStore = create<OrderStore>((set, get) => ({
     const order = get().orders.find((o) => o.id === id);
     if (!order) return false;
 
-    // PROTEKSI: order yang masih "Sampai" tidak boleh langsung ditandai
-    // "Selesai" sebelum bukti sampai (foto) diupload admin.
-    if (status === "Selesai" && !order.buktiSampai) {
+    // PROTEKSI 1: tidak boleh lompat tahap (mis. Diproses langsung ke Sampai,
+    // atau Dikirim langsung ke Selesai). Harus urut sesuai FORWARD_FLOW.
+    if (!FORWARD_FLOW[order.status].includes(status)) {
+      return false;
+    }
+
+    // PROTEKSI 2: order tidak boleh ditandai "Selesai" kalau belum pernah
+    // benar-benar melalui status "Dikirim" (dikirimAt kosong), DAN belum ada
+    // bukti sampai (foto) yang diupload admin. Dua-duanya wajib.
+    if (status === "Selesai" && (!order.dikirimAt || !order.buktiSampai)) {
       return false;
     }
 
     set((state) => ({
       orders: state.orders.map((o) =>
         o.id === id
-          ? { ...o, status, actions: getActionsForStatus(status) }
+          ? {
+              ...o,
+              status,
+              actions: getActionsForStatus(status),
+              // catat jejak pertama kali order ini berstatus "Dikirim"
+              dikirimAt:
+                status === "Dikirim" ? (o.dikirimAt ?? nowId()) : o.dikirimAt,
+            }
           : o,
       ),
     }));

@@ -170,7 +170,7 @@ export const ordersAdmin: OrderAdmin[] = [
     delivery: { date: "10/4/2026" },
     items: [
       { name: "Black Forest Cake", qty: 1, productId: "1" },
-      { name: "Chocolate Brownies", qty: 2, productId: "3" },
+      { name: "Chocolate Brownies Ulang Tahun", qty: 2, productId: "3" },
     ],
     note: "Mohon dikirim pagi hari",
     statusInfo: "Pesanan Menunggu - konfirmasi Pembayaran oleh pembeli",
