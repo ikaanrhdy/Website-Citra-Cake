@@ -70,19 +70,42 @@ const PenilaianPage = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleBack = () => navigate(-1);
+  const handleBack = () => {
+    console.log("handleBack dipanggil, mau navigate ke /order?tab=Selesai");
+    navigate("/order?tab=Selesai", { replace: true });
+    console.log("navigate() sudah dipanggil");
+  };
 
   const handleSubmit = () => {
-    if (rating === 0 || !fotoFile || !orderId) return;
+    console.log("handleSubmit dipanggil", { rating, fotoFile, orderId });
 
-    // TODO: kalau ada backend, upload fotoFile ke server/storage dulu di sini
-    // dan pakai URL hasil upload-nya, bukan object URL lokal (object URL
-    // bakal invalid lagi setelah reload/tab ditutup).
+    if (rating === 0 || !fotoFile || !orderId) {
+      console.log("handleSubmit STOP di sini karena kondisi tidak lolos", {
+        ratingZero: rating === 0,
+        fotoKosong: !fotoFile,
+        orderIdKosong: !orderId,
+      });
+      return;
+    }
+
     const fotoUrl = URL.createObjectURL(fotoFile);
+    console.log("fotoUrl dibuat:", fotoUrl);
 
     submitPenilaian(orderId, { rating, review, fotoUrl });
-    navigate(-1);
+    console.log("submitPenilaian selesai, sekarang navigate...");
+
+    navigate("/order?tab=Selesai", { replace: true });
+    console.log(
+      "navigate() sudah dipanggil, harusnya sekarang di /order?tab=Selesai",
+    );
   };
+
+  console.log("PenilaianPage state:", {
+    rating,
+    review,
+    fotoFile,
+    fotoPreview,
+  });
 
   const displayedRating = hoverRating || rating;
   const canSubmit = rating > 0 && !!fotoFile;
@@ -261,18 +284,27 @@ const PenilaianPage = () => {
 
       {/* Footer aksi */}
       {!isReadOnly && (
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 py-3 flex gap-3 justify-end">
+        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 py-3 flex gap-3">
           <Button
             variant="ghost"
-            className="cursor-pointer"
-            onClick={handleBack}
+            className="flex-1 min-w-0 cursor-pointer"
+            onClick={() => {
+              console.log("Klik Batal");
+              handleBack();
+            }}
           >
             Batal
           </Button>
           <Button
-            className="bg-primary text-white cursor-pointer"
+            className="flex-1 min-w-0 bg-primary text-white cursor-pointer"
             disabled={!canSubmit}
-            onClick={handleSubmit}
+            onClick={() => {
+              console.log("Klik Kirim Penilaian, canSubmit:", canSubmit, {
+                rating,
+                fotoFile,
+              });
+              handleSubmit();
+            }}
           >
             Kirim Penilaian
           </Button>

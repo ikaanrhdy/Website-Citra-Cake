@@ -111,7 +111,7 @@ function App() {
         <Route element={<RincianPesananPage />} path="/rincian-pesanan/:id" />
 
         {/* penilaian */}
-        <Route element={<PenilaianPage />} path="/penilaian/:id" />
+        <Route path="/penilaian/:orderId" element={<PenilaianPage />} />
 
         {/* cart */}
         <Route element={<ProtectedRoutes />}>

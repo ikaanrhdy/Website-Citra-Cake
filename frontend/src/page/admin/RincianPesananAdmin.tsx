@@ -60,6 +60,15 @@ const RincianPesananAdmin = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { orders } = useOrderAdminStore();
+  const updateOrderStatus = useOrderAdminStore((s) => s.updateOrderStatus);
+  const uploadBuktiSampai = useOrderAdminStore((s) => s.uploadBuktiSampai);
+  const resolveCancelRequest = useOrderAdminStore(
+    (s) => s.resolveCancelRequest,
+  );
+  const resolveRefundRequest = useOrderAdminStore(
+    (s) => s.resolveRefundRequest,
+  );
+  const finalizeRefund = useOrderAdminStore((s) => s.finalizeRefund);
   const [showUploadBukti, setShowUploadBukti] = useState(false);
 
   const { role } = useAuthStore();
@@ -139,12 +148,89 @@ const RincianPesananAdmin = () => {
       setShowUploadBukti(true);
       return;
     }
-    // TODO: handle action lain (Proses, Tolak, Selesai, dst)
+
+    // ── Order sedang punya pengajuan PEMBATALAN yang menunggu review ──
+    if (order.cancelRequest?.status === "menunggu") {
+      if (actionLabel === "Terima") {
+        resolveCancelRequest(order.id, "diterima");
+      } else if (actionLabel === "Tolak") {
+        const catatan = window.prompt(
+          "Catatan penolakan pembatalan (opsional):",
+          "",
+        );
+        resolveCancelRequest(order.id, "ditolak", catatan ?? undefined);
+      }
+      return;
+    }
+
+    // ── Order sedang punya pengajuan PENGEMBALIAN DANA yang menunggu review ──
+    if (order.refundRequest?.status === "menunggu") {
+      if (actionLabel === "Review Pengajuan") {
+        // sudah di halaman detail, tidak perlu navigasi lagi
+        return;
+      } else if (actionLabel === "Tolak") {
+        const catatan = window.prompt(
+          "Catatan penolakan pengembalian dana (opsional):",
+          "",
+        );
+        resolveRefundRequest(order.id, "ditolak", catatan ?? undefined);
+      } else if (actionLabel === "Kembalikan") {
+        const catatan = window.prompt(
+          "Catatan persetujuan pengembalian dana (opsional):",
+          "",
+        );
+        resolveRefundRequest(order.id, "disetujui", catatan ?? undefined);
+      }
+      return;
+    }
+
+    // ── Refund sudah disetujui, tinggal difinalisasi (dana benar2 dikirim) ──
+    if (
+      order.refundRequest?.status === "disetujui" &&
+      actionLabel === "Kembalikan"
+    ) {
+      finalizeRefund(order.id);
+      return;
+    }
+
+    // ── PROTEKSI: "Selesai" wajib ada bukti sampai dulu ──
+    if (actionLabel === "Selesai" && !order.buktiSampai) {
+      alert(
+        "Upload bukti foto sampai dulu sebelum menandai pesanan ini Selesai.",
+      );
+      setShowUploadBukti(true);
+      return;
+    }
+
+    // ── Alur status pesanan normal ──
+    switch (actionLabel) {
+      case "Proses":
+        updateOrderStatus(order.id, "Diproses");
+        break;
+      case "Dikirim":
+        updateOrderStatus(order.id, "Dikirim");
+        break;
+      case "Sampai":
+        updateOrderStatus(order.id, "Sampai");
+        break;
+      case "Selesai":
+        updateOrderStatus(order.id, "Selesai");
+        break;
+      case "Tolak":
+        updateOrderStatus(order.id, "Dibatalkan");
+        break;
+      default:
+        console.warn("Aksi belum ditangani:", actionLabel);
+    }
   };
 
   const handleUploadBuktiSubmit = (data: { file: File; catatan: string }) => {
-    console.log("Upload bukti submitted:", order.id, data);
-    // TODO: kirim ke API di sini
+    // TODO: kalau ada backend, upload data.file ke server/storage dulu di sini
+    // dan pakai URL hasil upload-nya, bukan object URL lokal (object URL
+    // bakal invalid lagi setelah reload/tab ditutup).
+    const fotoUrl = URL.createObjectURL(data.file);
+    uploadBuktiSampai(order.id, { fotoUrl, catatan: data.catatan });
+    setShowUploadBukti(false);
   };
 
   return (
@@ -215,6 +301,31 @@ const RincianPesananAdmin = () => {
             >
               <p className="text-sm font-medium text-gray-800">Catatan</p>
               <p className="text-sm text-gray-500">{catatan}</p>
+            </motion.div>
+          )}
+
+          {/* BUKTI SAMPAI yang sudah diupload */}
+          {order.buktiSampai && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.11 }}
+              className="bg-white border border-green-200 rounded-lg p-4 flex flex-col gap-2"
+            >
+              <p className="text-sm font-medium text-gray-800">Bukti Sampai</p>
+              <img
+                src={order.buktiSampai.fotoUrl}
+                alt="Bukti sampai"
+                className="w-full aspect-4/3 object-cover rounded-md border border-gray-200"
+              />
+              <p className="text-xs text-gray-500">
+                Diupload: {order.buktiSampai.uploadedAt}
+              </p>
+              {order.buktiSampai.catatan && (
+                <p className="text-sm text-gray-600 italic">
+                  {order.buktiSampai.catatan}
+                </p>
+              )}
             </motion.div>
           )}
 
@@ -447,11 +558,20 @@ const RincianPesananAdmin = () => {
             >
               {order.actions.map((action) => {
                 const ActionIcon = action.icon;
+                const isSelesaiLocked =
+                  action.label === "Selesai" && !order.buktiSampai;
                 return (
                   <button
                     key={action.label}
                     onClick={() => handleActionClick(action.label)}
-                    className={`inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-md border transition-opacity hover:opacity-80 cursor-pointer ${action.textClass} ${action.bgClass} ${action.borderClass}`}
+                    title={
+                      isSelesaiLocked
+                        ? "Upload bukti sampai dulu sebelum menandai Selesai"
+                        : undefined
+                    }
+                    className={`inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-md border transition-opacity hover:opacity-80 cursor-pointer ${action.textClass} ${action.bgClass} ${action.borderClass} ${
+                      isSelesaiLocked ? "opacity-50" : ""
+                    }`}
                   >
                     <ActionIcon className="w-4 h-4" />
                     {action.label}

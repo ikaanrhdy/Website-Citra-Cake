@@ -48,6 +48,14 @@ export interface CancelRequestInfo {
   catatanAdmin?: string;
 }
 
+// Bukti foto/catatan yang diupload admin saat paket sudah "Sampai".
+// Kalau field ini kosong, order belum boleh ditandai "Selesai".
+export interface BuktiSampaiInfo {
+  fotoUrl: string; // object URL / URL hasil upload foto bukti
+  catatan?: string;
+  uploadedAt: string; // tanggal & waktu upload
+}
+
 export interface OrderAdmin {
   id: string;
   date: string;
@@ -72,6 +80,7 @@ export interface OrderAdmin {
   actions: ActionButtonAdmin[];
   refundRequest?: RefundRequestInfo;
   cancelRequest?: CancelRequestInfo;
+  buktiSampai?: BuktiSampaiInfo;
   subtotalPengiriman?: number;
   biayaLayanan?: number;
 }

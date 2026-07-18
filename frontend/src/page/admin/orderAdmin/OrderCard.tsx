@@ -5,6 +5,7 @@ import { statusConfig } from "@/data/orderAdminDummy";
 import type { OrderAdmin } from "@/types/orderAdmin";
 import { useNavigate } from "react-router";
 import UploadBuktiSampaiAdmin from "@/components/admin/UploadBuktiSampaiAdmin";
+import useOrderAdminStore from "@/app/store/admin/useOrderAdminStore";
 
 const OrderCard = ({
   order,
@@ -18,6 +19,16 @@ const OrderCard = ({
   const st = statusConfig[order.status];
   const StatusIcon = st.icon;
   const navigate = useNavigate();
+
+  const updateOrderStatus = useOrderAdminStore((s) => s.updateOrderStatus);
+  const uploadBuktiSampai = useOrderAdminStore((s) => s.uploadBuktiSampai);
+  const resolveCancelRequest = useOrderAdminStore(
+    (s) => s.resolveCancelRequest,
+  );
+  const resolveRefundRequest = useOrderAdminStore(
+    (s) => s.resolveRefundRequest,
+  );
+  const finalizeRefund = useOrderAdminStore((s) => s.finalizeRefund);
 
   const [showUploadBukti, setShowUploadBukti] = useState(false);
 
@@ -36,12 +47,89 @@ const OrderCard = ({
       setShowUploadBukti(true);
       return;
     }
-    // TODO: handle action lain (Proses, Tolak, Selesai, dst)
+
+    // ── Order sedang punya pengajuan PEMBATALAN yang menunggu review ──
+    if (order.cancelRequest?.status === "menunggu") {
+      if (actionLabel === "Terima") {
+        resolveCancelRequest(order.id, "diterima");
+      } else if (actionLabel === "Tolak") {
+        const catatan = window.prompt(
+          "Catatan penolakan pembatalan (opsional):",
+          "",
+        );
+        resolveCancelRequest(order.id, "ditolak", catatan ?? undefined);
+      }
+      return;
+    }
+
+    // ── Order sedang punya pengajuan PENGEMBALIAN DANA yang menunggu review ──
+    if (order.refundRequest?.status === "menunggu") {
+      if (actionLabel === "Review Pengajuan") {
+        handleOpenDetail();
+      } else if (actionLabel === "Tolak") {
+        const catatan = window.prompt(
+          "Catatan penolakan pengembalian dana (opsional):",
+          "",
+        );
+        resolveRefundRequest(order.id, "ditolak", catatan ?? undefined);
+      } else if (actionLabel === "Kembalikan") {
+        const catatan = window.prompt(
+          "Catatan persetujuan pengembalian dana (opsional):",
+          "",
+        );
+        resolveRefundRequest(order.id, "disetujui", catatan ?? undefined);
+      }
+      return;
+    }
+
+    // ── Refund sudah disetujui, tinggal difinalisasi (dana benar2 dikirim) ──
+    if (
+      order.refundRequest?.status === "disetujui" &&
+      actionLabel === "Kembalikan"
+    ) {
+      finalizeRefund(order.id);
+      return;
+    }
+
+    // ── PROTEKSI: "Selesai" wajib ada bukti sampai dulu ──
+    if (actionLabel === "Selesai" && !order.buktiSampai) {
+      alert(
+        "Upload bukti foto sampai dulu sebelum menandai pesanan ini Selesai.",
+      );
+      setShowUploadBukti(true);
+      return;
+    }
+
+    // ── Alur status pesanan normal ──
+    switch (actionLabel) {
+      case "Proses":
+        updateOrderStatus(order.id, "Diproses");
+        break;
+      case "Dikirim":
+        updateOrderStatus(order.id, "Dikirim");
+        break;
+      case "Sampai":
+        updateOrderStatus(order.id, "Sampai");
+        break;
+      case "Selesai":
+        updateOrderStatus(order.id, "Selesai");
+        break;
+      case "Tolak":
+        // Admin menolak pesanan langsung (bukan pengajuan pembatalan pembeli)
+        updateOrderStatus(order.id, "Dibatalkan");
+        break;
+      default:
+        console.warn("Aksi belum ditangani:", actionLabel);
+    }
   };
 
   const handleUploadBuktiSubmit = (data: { file: File; catatan: string }) => {
-    console.log("Upload bukti submitted:", order.id, data);
-    // TODO: kirim ke API di sini
+    // TODO: kalau ada backend, upload data.file ke server/storage dulu di sini
+    // dan pakai URL hasil upload-nya, bukan object URL lokal (object URL
+    // bakal invalid lagi setelah reload/tab ditutup).
+    const fotoUrl = URL.createObjectURL(data.file);
+    uploadBuktiSampai(order.id, { fotoUrl, catatan: data.catatan });
+    setShowUploadBukti(false);
   };
 
   return (
@@ -122,6 +210,30 @@ const OrderCard = ({
         </div>
       )}
 
+      {/* ── Bukti Sampai yang sudah diupload ── */}
+      {order.buktiSampai && order.status === "Sampai" && (
+        <div className="flex gap-2 rounded-md px-3 py-2.5 border bg-green-50 border-green-200">
+          <img
+            src={order.buktiSampai.fotoUrl}
+            alt="Bukti sampai"
+            className="w-12 h-12 rounded-md object-cover border border-green-200 shrink-0"
+          />
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-green-700">
+              Bukti sampai sudah diupload
+            </p>
+            <p className="text-[11px] text-gray-500 mt-0.5">
+              {order.buktiSampai.uploadedAt}
+            </p>
+            {order.buktiSampai.catatan && (
+              <p className="text-xs mt-1 text-green-700 italic truncate">
+                {order.buktiSampai.catatan}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Timeline Info Box (Sampai / Selesai) ── */}
       {order.timeline && (
         <div
@@ -149,11 +261,20 @@ const OrderCard = ({
         <div className="flex items-center gap-2 flex-wrap">
           {order.actions.map((action) => {
             const ActionIcon = action.icon;
+            const isSelesaiLocked =
+              action.label === "Selesai" && !order.buktiSampai;
             return (
               <button
                 key={action.label}
                 onClick={(e) => handleActionClick(e, action.label)}
-                className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border transition-opacity cursor-pointer hover:opacity-80 ${action.textClass} ${action.bgClass} ${action.borderClass}`}
+                title={
+                  isSelesaiLocked
+                    ? "Upload bukti sampai dulu sebelum menandai Selesai"
+                    : undefined
+                }
+                className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border transition-opacity cursor-pointer hover:opacity-80 ${action.textClass} ${action.bgClass} ${action.borderClass} ${
+                  isSelesaiLocked ? "opacity-50" : ""
+                }`}
               >
                 <ActionIcon className="w-3.5 h-3.5" />
                 {action.label}
@@ -273,12 +394,6 @@ const OrderCard = ({
                 {order.refundRequest.catatanAdmin}
               </p>
             </>
-          )}
-
-          {order.refundRequest.status === "menunggu" && !readOnly && (
-            <button className="mt-2 text-xs font-medium px-3 py-1.5 rounded-md bg-orange-500 text-white hover:opacity-80">
-              Review Pengajuan
-            </button>
           )}
         </div>
       )}

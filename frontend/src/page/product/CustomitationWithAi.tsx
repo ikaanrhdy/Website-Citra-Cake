@@ -211,17 +211,17 @@ const CustomitationWithAi = () => {
       {/* ================= FOOTER ACTION (mobile only) ================= */}
       <motion.div
         variants={item}
-        className="lg:hidden sticky bottom-0 bg-white border-t p-4 flex flex-col md:flex-row gap-3 max-w-2xl mx-auto w-full"
+        className="lg:hidden sticky bottom-0 bg-white border-t p-4 flex flex-row gap-3 max-w-2xl mx-auto w-full"
       >
         <Button
           onClick={() => handleSubmit("cart")}
-          className="w-full bg-white border text-black cursor-pointer hover:text-white"
+          className="flex-1 min-w-0 bg-white border text-black cursor-pointer hover:text-white"
         >
           Masukkan Keranjang
         </Button>
         <Button
           onClick={() => handleSubmit("buy")}
-          className="w-full bg-primary text-white cursor-pointer"
+          className="flex-1 min-w-0 bg-primary text-white cursor-pointer"
         >
           Beli Sekarang
         </Button>
